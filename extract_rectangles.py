@@ -4,9 +4,9 @@ from matplotlib import pyplot as plt
 from sklearn.cluster import KMeans
 
 
-
-img = plt.imread("file.tif")
+img = plt.imread("file2.tif")
 edges = cv2.Canny(img,100,200)
+cv2.imwrite("edges.tif", edges)
 lines = cv2.HoughLines(edges,1,np.pi/360,250)
 
 #try to find main angles
@@ -15,8 +15,8 @@ X = lines[0][:,1]
 X = X.reshape(-1, 1)
 centers = km.fit_predict(X)
 
-theta0 = km.cluster_centers_[1][0]
-theta1 = km.cluster_centers_[0][0]
+theta0 = km.cluster_centers_[0][0]
+theta1 = km.cluster_centers_[1][0]
 
 #divide all lines on 2 class
 side_a = list()
@@ -33,11 +33,20 @@ for c in centers:
 
 #bound rectangle lines
 sides = list()
-sides.append([max(side_a), theta0])
-sides.append([min(side_a), theta0])
-sides.append([max(side_b), theta1])
-sides.append([min(side_b), theta1])
-
+if theta0<theta1:
+    sides.append([max(side_a), theta0])
+    sides.append([min(side_a), theta0])
+    sides.append([max(side_b), theta1])
+    sides.append([min(side_b), theta1])
+else:
+    sides.append([max(side_b), theta1])
+    sides.append([min(side_b), theta1])
+    sides.append([max(side_a), theta0])
+    sides.append([min(side_a), theta0])
+    tmp = theta0
+    theta0 = theta1
+    theta1 = tmp
+    
 for rho, theta in sides:
      a = np.cos(theta)
      b = np.sin(theta)
@@ -48,7 +57,7 @@ for rho, theta in sides:
      x2 = int(x0 - 3000*(-b))
      y2 = int(y0 - 3000*(a))
      
-     cv2.line(img,(x1,y1),(x2,y2),(0),2)
+     cv2.line(img,(x1,y1),(x2,y2),(0),1)
 
 cv2.imwrite("file1-lines.tif", img)
 
@@ -71,8 +80,6 @@ p2 = np.dot(A_inv, b)
 b[0] = sides[1][0]
 b[1] = sides[2][0]
 p3 = np.dot(A_inv, b)
-
-print p1, p2, p3
 
 rows = img.shape[0]
 cols = img.shape[1]
