@@ -5,15 +5,6 @@ from skimage import measure
 from skimage import morphology as mph
 from sklearn.cluster import KMeans
 
-def get_edges(img, threshold):
-    edges = cv2.Canny(img,100,200)
-    
-    labels, num = measure.label(edges, return_num = True)
-    res = mph.remove_small_objects(labels, min_size=threshold, connectivity=2, in_place=False)
-    res = cv2.compare(res, 0, cv2.CMP_GT)
-    
-    return res
-
 filename1 = "output/00002-edges.tif"
 filename2 = "Photos/160827-112231--NA052964359RU-A77VCD01.tif"
 filename3 = "Photos/160827-112227--NA052964504RU-A77VCD01.tif"
