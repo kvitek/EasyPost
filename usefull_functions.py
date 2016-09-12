@@ -25,24 +25,26 @@ def get_corners(edges, threshold):
     dst = cv2.cornerHarris(dst,3,3,threshold)
     return dst
     
-def get_trans_points(lines_0, lines_1):
-    dim0 = len(lines_0)
-    dim1 = len(lines_0)
-    b = np.zeros((dim0*dim1, 1))
-    A = np.zeros((dim0*dim1, dim0*dim1))
-    j = 0
-    for line0 in lines_0:
-        for line1 in lines_1:
-            A[j,j] = line0[3]-line0[1]
-            A[j,j+1] = -line0[2]+line0[0]
-            b[j] = -line0[1]*line0[2] + line0[0]*line0[3]
-            
-            A[j+1,j] = line1[3]-line1[1]
-            A[j+1,j+1] = -line1[2]+line1[0]
-            b[j+1] = -line1[1]*line1[2] + line1[0]*line1[3]
-            
-            j = j+2
-    A_inv = inv(A)
-    X = np.dot(A_inv,b)
+def line_distances(x0, y0, theta, lines):
+    X_1 = np.array(lines[:,0:2])
+    X_2 = np.array(lines[:,2:4])
+    X_1 = X_1.T
+    X_2 = X_2.T
+    m = X_1.shape[1]
+    p = np.ndarray((2,1), dtype=float)
+    p[0] = x0; p[1] = y0;
+    P = np.multiply(p, np.ones((2,m)))
     
-    return np.int32(X)
+    v = np.zeros((2,1))
+    v[1] = np.sin(theta); v[0] = np.cos(theta);
+    
+    Y_1 = X_1 - P
+    Y_2 = X_2 - P
+    res_1 = Y_1 - np.dot(v, np.dot(v.T, Y_1))
+    res_2 = Y_2 - np.dot(v, np.dot(v.T, Y_2))
+    res_1 = res_1**2
+    res_2 = res_2**2    
+    res = np.sum(res_1, axis=0) + np.sum(res_2,axis=0)
+    res = np.sqrt(res)
+    return res
+    
