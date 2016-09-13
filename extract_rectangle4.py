@@ -10,9 +10,10 @@ filename2 = "Photos/160827-112231--NA052964359RU-A77VCD01.tif"
 filename3 = "Photos/160827-112227--NA052964504RU-A77VCD01.tif"
 filename4 = "Photos/160827-112255--NA052964230RU-A77VCD01.tif"
 filename5 = "Photos/160827-112634--NA052964393RU-A77VCD01.tif"
+filename6 = "Photos/160827-112253--NA052964265RU-A77VCD01.tif"
 
 
-img = plt.imread(filename4)
+img = plt.imread(filename6)
 
 edges = get_edges(img, 2000)
 cv2.imwrite("Filtered/skl_edges.tif", edges)
