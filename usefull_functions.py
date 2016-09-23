@@ -1,4 +1,5 @@
 import cv2
+import math
 from skimage import measure
 from skimage import morphology as mph
 import numpy as np
@@ -47,4 +48,24 @@ def line_distances(x0, y0, theta, lines):
     res = np.sum(res_1, axis=0) + np.sum(res_2,axis=0)
     res = np.sqrt(res)
     return res
+    
+def line_distances_axis(lines, precision):
+    lines_h = list()
+    dist_h = list()
+    lines_v = list()
+    dist_v = list()
+    
+    for x1, y1, x2, y2 in lines:
+        cos = float(abs(x2-x1))/np.sqrt( (x2-x1)**2+(y2-y1)**2 )
+        sin = float(abs(y2-y1))/np.sqrt( (x2-x1)**2+(y2-y1)**2 )
+        
+        if cos>1-precision:
+            lines_h.append((x1,y1,x2,y2))
+            dist_h.append(float(y1+y2)/2)
+        elif sin > 1-precision:
+            lines_v.append((x1,y1,x2,y2))
+            dist_v.append(float(x1+x2)/2)
+    
+    return lines_h, dist_h, lines_v, dist_v
+        
     

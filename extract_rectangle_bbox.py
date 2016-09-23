@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 from sklearn.cluster import MeanShift
 from usefull_functions import get_edges
 from usefull_functions import line_distances
+from usefull_functions import line_distances_axis
 
 filename2 = "Photos/160827-112231--NA052964359RU-A77VCD01.tif"
 filename3 = "Photos/160827-112227--NA052964504RU-A77VCD01.tif"
@@ -37,17 +38,47 @@ M = cv2.getAffineTransform(pts1,pts2)
 dst = cv2.warpAffine(img,M,(b,a))
 edges = cv2.warpAffine(edges,M,(b,a))
 
-kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(5,5))
-edges = cv2.dilate(edges,kernel,1)
+#kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
+#edges = cv2.morphologyEx(edges,kernel,1)
 
 minLineLength = 120
 maxLineGap = 10
 color = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
 
-#lines = cv2.HoughLinesP(edges,1,np.pi/180,100,minLineLength,maxLineGap)
-#
-#for x1,y1,x2,y2 in lines[0]:
-#    cv2.line(color,(x1,y1),(x2,y2),(0,255,0),1)
+lines = cv2.HoughLinesP(edges,1,np.pi/180,100,minLineLength,maxLineGap)
+
+lines_h, dist_h, lines_v, dist_v = line_distances_axis(lines[0], 0.1)
+
+
+
+epsilon = 15
+ms = MeanShift(bandwidth=epsilon)
+
+dists = np.array(dist_h)
+ms.fit(dists.reshape((dists.shape[0],1)))
+
+h_base = list()
+
+i = 0
+for l in ms.labels_:
+    ls = lines_h[np.where(lines_h==l)]
+    m1 = min(ls[:][0])
+    m2 = min(ls[:][2])
+    if m1<m2: mn =m1
+    else: mn=m2
+    
+    m1 = max(ls[:][1])
+    m2 = max(ls[:][3])
+    if m1>m2: mx =m1
+    else: mx=m2
+    
+    h_base.append(ms.cluster_centers_[i], mn, mx)
+    i = i+1
+
+for x1,y1,x2,y2 in lines_h:
+    cv2.line(color,(x1,y1),(x2,y2),(255,0,0),1)
+for x1,y1,x2,y2 in lines_v:
+    cv2.line(color,(x1,y1),(x2,y2),(0,255,0),1)
 
 cv2.imwrite("Filtered/rect.tif", dst)
 cv2.imwrite("Filtered/edges.tif", color)
