@@ -49,8 +49,6 @@ lines = cv2.HoughLinesP(edges,1,np.pi/180,100,minLineLength,maxLineGap)
 
 lines_h, dist_h, lines_v, dist_v = line_distances_axis(lines[0], 0.1)
 
-
-
 epsilon = 15
 ms = MeanShift(bandwidth=epsilon)
 
@@ -60,20 +58,20 @@ ms.fit(dists.reshape((dists.shape[0],1)))
 h_base = list()
 
 i = 0
-for l in ms.labels_:
-    ls = lines_h[np.where(lines_h==l)]
-    m1 = min(ls[:][0])
-    m2 = min(ls[:][2])
-    if m1<m2: mn =m1
-    else: mn=m2
-    
-    m1 = max(ls[:][1])
-    m2 = max(ls[:][3])
-    if m1>m2: mx =m1
-    else: mx=m2
-    
-    h_base.append(ms.cluster_centers_[i], mn, mx)
-    i = i+1
+#for l in ms.labels_:
+#    ls = lines_h[np.where(ms.labels_==l)]
+#    m1 = min(ls[:][0])
+#    m2 = min(ls[:][2])
+#    if m1<m2: mn =m1
+#    else: mn=m2
+#    
+#    m1 = max(ls[:][1])
+#    m2 = max(ls[:][3])
+#    if m1>m2: mx =m1
+#    else: mx=m2
+#    
+#    h_base.append(ms.cluster_centers_[i], mn, mx)
+#    i = i+1
 
 for x1,y1,x2,y2 in lines_h:
     cv2.line(color,(x1,y1),(x2,y2),(255,0,0),1)
