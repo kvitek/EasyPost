@@ -46,3 +46,4 @@ for (dirpath, dirnames, filenames) in walk("Photos"):
         dst = get_main_image(img)
         cv2.imwrite(to_filename, dst)
         i=i+1
+        print filename, i
