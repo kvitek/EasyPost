@@ -6,7 +6,7 @@ import numpy as np
 from numpy.linalg import inv
 
 def get_edges(img, threshold):
-    edges = cv2.Canny(img,100,200)
+    edges = cv2.Canny(img,60,200)
     
     labels, num = measure.label(edges, return_num = True)
     mph.remove_small_objects(labels, min_size=threshold, connectivity=2, in_place=True)
