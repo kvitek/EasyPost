@@ -10,7 +10,8 @@ for (dirpath, dirnames, filenames) in walk("Photos"):
         to_filename = "0000" + str(i)
         to_filename = "Output/" + to_filename[len(to_filename)-5:] + ".tif"
         img = plt.imread(dirpath + "/" + filename)
-        dst = get_text_boxes(img, maxSize=25, h_overlap=2.0, v_overlap=2.0)
+        boxes = get_text_boxes(img, maxSize=25, h_overlap=2.0, v_overlap=2.0)
+        
         cv2.imwrite(to_filename, dst)
         i=i+1
         print filename, i

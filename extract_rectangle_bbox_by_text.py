@@ -3,9 +3,7 @@ import numpy as np
 import math
 from matplotlib import pyplot as plt
 from sklearn.cluster import MeanShift
-from usefull_functions import get_edges
-from usefull_functions import line_distances
-from usefull_functions import line_distances_axis
+from usefull_functions import get_text_boxes
 
 filename2 = "Photos/160827-112231--NA052964359RU-A77VCD01.tif"
 filename3 = "Photos/160827-112227--NA052964504RU-A77VCD01.tif"
@@ -15,64 +13,47 @@ filename6 = "Photos/160827-112253--NA052964265RU-A77VCD01.tif"
 filename7 = "Photos/160827-095711--NA040374451RU-A77VCD01.tif"
 filename8 = "Photos/160827-112227--NA052964504RU-A77VCD01-20-.tif"
 
-img = plt.imread(filename3)
-edges = cv2.Canny(img, 100, 200)
-#edges = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,\
-#                cv2.THRESH_BINARY,11,2)
-#ret, edges = cv2.threshold(img,127,255,cv2.THRESH_BINARY_INV)
+img = plt.imread(filename4)
 
-cv2.imwrite("Filtered/edges.tif", edges)
-contours, hierarchy = cv2.findContours(edges,cv2.RETR_CCOMP ,cv2.CHAIN_APPROX_SIMPLE)
+boxes = get_text_boxes(img, maxSize=25)
 
-color = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
-mask = np.ndarray(edges.shape, edges.dtype)
-
-print "Total contours,",len(contours)
-i=0
-for c in contours:
-    x,y,h,w = cv2.boundingRect(c)
-    if h<100 and w<100:
-        rect = cv2.minAreaRect(c)
-        if rect[1][1] > 50 or rect[1][0]>50:
-            continue
-        if rect[1][1] < 0.1:
-            continue
-        if rect[1][1] < 5:
-            continue
-        if rect[1][0] < 5:
-            continue
-        aspect = rect[1][0]/rect[1][1]
-        if aspect<3 and aspect>0.3:
-            rect2 = (rect[0], (rect[1][0]*2, rect[1][1]*2), rect[2])
-            box2 = np.array(cv2.cv.BoxPoints(rect2), np.int32)
-            box = np.array(cv2.cv.BoxPoints(rect), np.int32)
-            #cv2.drawContours(color, [box], 0, (0,255,0), 1)
-            box = box.reshape((-1,1,2))
-            cv2.polylines(color,[box], True, (0,255,0), 1)
-            cv2.fillPoly(mask,[box2],255)
-            i = i+1
-print "Text contours,", i
-
-cv2.imwrite("Filtered/boxes.tif", color)
-cv2.imwrite("Filtered/mask.tif", mask)
-
-contours, hierarchy = cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-
-color = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-
-print "Detected boxes,", len(contours)
-i=0
-for c in contours:
-    rect = cv2.minAreaRect(c)
-    if not (rect[1][0]>100 or rect[1][1]>100):
-        continue
- 
-    box = np.array(cv2.cv.BoxPoints(rect), np.int32)
-    box = box.reshape((-1,1,2))
-    cv2.polylines(color,[box], True, (0,255,0), 3)
-    i = i+1
-
-print "Text boxes,", i
+ts = list()
+W = 0
+H = 0
+for b in boxes:
+    c = b[0]-b[1]
+    w = np.sqrt(np.dot(c,c))
+    c = b[2]-b[1]
+    h = np.sqrt(np.dot(c,c))
+    srcp = np.ndarray((3,2), dtype=np.float32)
+    dstp = np.ndarray((3,2), dtype=np.float32)
+    if w>h:
+        tmp = h
+        h = w
+        w = tmp
+        srcp[0] = b[3]
+        srcp[1] = b[0]
+        srcp[2] = b[1]
+    else:
+        srcp[0] = b[0]
+        srcp[1] = b[1]
+        srcp[2] = b[2]
+    dstp[0] = [0,w-1]
+    dstp[1] = [0,0]
+    dstp[2] = [h-1,0]
     
-cv2.imwrite("Filtered/text_boxes.tif", color)
+    ts.append([int(w),int(h),srcp,dstp])
+    if h>H: H = int(h)
+    W = W + int(w)
 
+out = np.zeros((W,H), dtype=img.dtype)
+p = 0
+for t in ts:
+    M = cv2.getAffineTransform(t[2], t[3])
+    dst = cv2.warpAffine(img, M, (t[1],t[0]))
+    out[p:p+t[0], 0:t[1]] = dst[:,:]
+    p = p + t[0]
+    print p, t[1]
+    
+cv2.imwrite("Filtered/out.tif", out)
+    
