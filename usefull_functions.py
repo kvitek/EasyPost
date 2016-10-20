@@ -67,5 +67,52 @@ def line_distances_axis(lines, precision):
             dist_v.append(float(x1+x2)/2)
     
     return lines_h, dist_h, lines_v, dist_v
+    
+def get_text_boxes(img, minSize=5, maxSize=50, h_overlap=2.0, v_overlap=2.0):
+    edges = cv2.Canny(img, 100, 200)
+    contours, hierarchy = cv2.findContours(edges,cv2.RETR_CCOMP ,cv2.CHAIN_APPROX_SIMPLE)
+    
+    mask = np.ndarray(edges.shape, edges.dtype)
+    
+    print "Total contours,",len(contours)
+    i=0
+    for c in contours:
+        x,y,h,w = cv2.boundingRect(c)
+        if h<100 and w<100:
+            rect = cv2.minAreaRect(c)
+            if rect[1][1]>maxSize or rect[1][0]>maxSize:
+                continue
+            if rect[1][1] < 0.1:
+                continue
+            if rect[1][1] < minSize and rect[1][0] < minSize:
+                continue
+            
+            aspect = rect[1][0]/rect[1][1]
+            if aspect<3 and aspect>0.3:
+                rect2 = (rect[0], (rect[1][0]*v_overlap, rect[1][1]*h_overlap), rect[2])
+                box2 = np.array(cv2.cv.BoxPoints(rect2), np.int32)
+                cv2.fillPoly(mask,[box2],255)
+                i = i+1
+    print "Text contours,", i
+    
+    contours, hierarchy = cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    
+    color = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    
+    print "Detected boxes,", len(contours)
+    i=0
+    for c in contours:
+        rect = cv2.minAreaRect(c)
+        if not (rect[1][0]>100 or rect[1][1]>100):
+            continue
+     
+        box = np.array(cv2.cv.BoxPoints(rect), np.int32)
+        box = box.reshape((-1,1,2))
+        cv2.polylines(color,[box], True, (0,255,0), 3)
+        i = i+1
+    
+    print "Text boxes,", i
+        
+    return color
         
     
