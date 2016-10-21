@@ -72,6 +72,7 @@ def get_text_boxes(img, minSize=5, maxSize=50, h_overlap=2.0, v_overlap=2.0, log
     edges = cv2.Canny(img, 100, 200)
     contours, hierarchy = cv2.findContours(edges,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
     
+    color = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     mask = np.ndarray(edges.shape, edges.dtype)
     
     if log: print "Total contours,",len(contours)
@@ -110,12 +111,12 @@ def get_text_boxes(img, minSize=5, maxSize=50, h_overlap=2.0, v_overlap=2.0, log
      
         box = np.array(cv2.cv.BoxPoints(rect), np.int32)
         boxes.append(box)
-#        box = box.reshape((-1,1,2))
-#        cv2.polylines(color,[box], True, (0,255,0), 3)
+        box = box.reshape((-1,1,2))
+        cv2.polylines(color,[box], True, (0,255,0), 3)
         i = i+1
     
     if log: print "Text boxes,", i
         
-    return boxes
+    return boxes, color
         
     
