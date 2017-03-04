@@ -104,6 +104,7 @@ def get_text_boxes(img, minSize=5, maxSize=50, h_overlap=2.0, v_overlap=2.0, log
         
     i=0
     boxes = list()
+    b_ceters = list()
     for c in contours:
         rect = cv2.minAreaRect(c)
         if not (rect[1][0]>100 or rect[1][1]>100):
@@ -118,5 +119,31 @@ def get_text_boxes(img, minSize=5, maxSize=50, h_overlap=2.0, v_overlap=2.0, log
     if log: print "Text boxes,", i
         
     return boxes, color
-        
+
+def get_textbox_centers(img, minSize=5, maxSize=50):
+    edges = cv2.Canny(img, 100, 200)
+    contours, hierarchy = cv2.findContours(edges,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
+    
+    rho = 0.0
+    b_centers = list()    
+    
+    for c in contours:
+        x,y,h,w = cv2.boundingRect(c)
+        if h<100 and w<100:
+            rect = cv2.minAreaRect(c)
+            if rect[1][1]>maxSize or rect[1][0]>maxSize:
+                continue
+            if rect[1][1] < 0.1:
+                continue
+            if rect[1][1] < minSize and rect[1][0] < minSize:
+                continue
+            
+            aspect = rect[1][0]/rect[1][1]
+            if aspect<3 and aspect>0.3:
+                b_centers.append(rect[0])
+                sz = max(rect[1][:])
+                if sz > rho:
+                    rho = sz
+                
+    return b_centers, rho   
     
